@@ -12,7 +12,6 @@
 	"include": [
 		"src/main/**/*",
 		"src/shared/**/*",
-		"electron.vite.config.ts",
-		"drizzle.config.ts"
+		"electron.vite.config.ts"
 	]
 }

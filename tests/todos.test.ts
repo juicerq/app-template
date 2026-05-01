@@ -1,16 +1,13 @@
-import { beforeEach, describe, expect, it } from "vitest";
+import { describe, expect, it } from "vitest";
 import { assertDefined } from "./utils/assertions";
-import { resetDb } from "./utils/db";
 import { testClient } from "./utils/orpc";
 
 describe("todos", () => {
-	beforeEach(() => resetDb());
-
 	it("creates a todo and returns the inserted row", async () => {
 		const created = await testClient.todos.create({ title: "Buy milk" });
 
 		expect(created.title).toBe("Buy milk");
-		expect(created.id).toBeGreaterThan(0);
+		expect(created.id).toMatch(/.+/);
 	});
 
 	it("lists todos newest first", async () => {

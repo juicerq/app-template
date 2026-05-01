@@ -9,7 +9,6 @@ export default defineConfig({
 		},
 	},
 	test: {
-		env: { DATABASE_PATH: ":memory:" },
 		setupFiles: ["./tests/setup.ts"],
 	},
 });

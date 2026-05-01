@@ -2,14 +2,39 @@ import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { app, BrowserWindow } from "electron";
 import { setupAutoUpdate } from "@main/auto-update";
-import "@main/db";
-import { DbSettings } from "@main/db/DbSettings";
 import { startOrpcServer } from "@main/ipc";
+import { Logger } from "@main/logger";
+import { Settings } from "@main/store/settings";
 
 const here = dirname(fileURLToPath(import.meta.url));
 
-function createWindow() {
-	const saved = DbSettings.get("windowBounds");
+process.on("uncaughtException", (err) => {
+	Logger.error("uncaughtException", { err: String(err), stack: err.stack });
+});
+
+process.on("unhandledRejection", (reason) => {
+	Logger.error("unhandledRejection", { reason: String(reason) });
+});
+
+function debounce<A extends unknown[]>(
+	fn: (...args: A) => unknown,
+	ms: number,
+) {
+	let timer: ReturnType<typeof setTimeout> | undefined;
+	return (...args: A) => {
+		if (timer) {
+			clearTimeout(timer);
+		}
+		timer = setTimeout(() => fn(...args), ms);
+	};
+}
+
+async function createWindow() {
+	const settings = await Settings.get().catch((err) => {
+		Logger.error("settings:read-failed", { err: String(err) });
+		return { theme: "system" as const };
+	});
+	const saved = settings.windowBounds;
 
 	const win = new BrowserWindow({
 		width: saved?.width ?? 1024,
@@ -29,12 +54,19 @@ function createWindow() {
 		win.maximize();
 	}
 
-	win.on("close", () => {
-		DbSettings.set("windowBounds", {
-			...win.getNormalBounds(),
-			maximized: win.isMaximized(),
-		});
-	});
+	const saveBounds = debounce(() => {
+		Settings.update({
+			windowBounds: {
+				...win.getNormalBounds(),
+				maximized: win.isMaximized(),
+			},
+		}).catch((err) => Logger.error("settings:windowBounds-save-failed", { err: String(err) }));
+	}, 500);
+
+	win.on("resize", saveBounds);
+	win.on("move", saveBounds);
+	win.on("maximize", saveBounds);
+	win.on("unmaximize", saveBounds);
 
 	if (!app.isPackaged && process.env.ELECTRON_RENDERER_URL) {
 		win.loadURL(process.env.ELECTRON_RENDERER_URL);
@@ -46,7 +78,9 @@ function createWindow() {
 
 app.whenReady().then(() => {
 	startOrpcServer();
-	createWindow();
+	createWindow().catch((err) =>
+		Logger.error("createWindow:failed", { err: String(err) }),
+	);
 	setupAutoUpdate();
 });
 

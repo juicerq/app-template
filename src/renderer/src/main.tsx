@@ -3,9 +3,12 @@ import { RouterProvider } from "@tanstack/react-router";
 import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
 import "@renderer/lib/api";
+import { installLoggerBridge } from "@renderer/lib/logger-bridge";
 import { queryClient } from "@renderer/lib/query-client";
 import { router } from "@renderer/lib/router";
 import "@renderer/styles.css";
+
+installLoggerBridge();
 
 const rootElement = document.getElementById("root");
 

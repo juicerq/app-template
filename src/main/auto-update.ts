@@ -1,5 +1,6 @@
 import { app } from "electron";
 import electronUpdater from "electron-updater";
+import { Logger } from "@main/logger";
 
 const { autoUpdater } = electronUpdater;
 
@@ -14,20 +15,20 @@ export function setupAutoUpdate(): void {
 	autoUpdater.autoInstallOnAppQuit = true;
 
 	autoUpdater.on("error", (err) => {
-		console.error("[auto-update] error", err);
+		Logger.error("auto-update:error", { err: String(err) });
 	});
 
 	autoUpdater.on("update-downloaded", (info) => {
-		console.info("[auto-update] downloaded", info.version);
+		Logger.info("auto-update:downloaded", { version: info.version });
 	});
 
 	autoUpdater.checkForUpdates().catch((err: unknown) => {
-		console.error("[auto-update] initial check failed", err);
+		Logger.error("auto-update:initial-check-failed", { err: String(err) });
 	});
 
 	setInterval(() => {
 		autoUpdater.checkForUpdates().catch((err: unknown) => {
-			console.error("[auto-update] periodic check failed", err);
+			Logger.error("auto-update:periodic-check-failed", { err: String(err) });
 		});
 	}, SIX_HOURS_MS);
 }

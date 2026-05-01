@@ -1,9 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useEffect } from "react";
-import type { SettingValue } from "@main/db/settingsContract";
+import type { Theme } from "@main/store/settings";
 import { orpc } from "@renderer/lib/api";
-
-type Theme = SettingValue<"theme">;
 
 const DEFAULT_THEME: Theme = "system";
 
@@ -17,14 +15,14 @@ function applyThemeClass(theme: Theme) {
 
 export function useTheme() {
 	const queryClient = useQueryClient();
-	const query = useQuery(orpc.settings.theme.get.queryOptions());
-	const theme: Theme = query.data?.value ?? DEFAULT_THEME;
+	const query = useQuery(orpc.settings.get.queryOptions());
+	const theme: Theme = query.data?.theme ?? DEFAULT_THEME;
 
 	const mutation = useMutation(
-		orpc.settings.theme.set.mutationOptions({
+		orpc.settings.update.mutationOptions({
 			onSuccess: () => {
 				queryClient.invalidateQueries({
-					queryKey: orpc.settings.theme.get.key(),
+					queryKey: orpc.settings.get.key(),
 				});
 			},
 		}),
@@ -43,5 +41,5 @@ export function useTheme() {
 		return () => mql.removeEventListener("change", onChange);
 	}, [theme]);
 
-	return { theme, setTheme: mutation.mutate };
+	return { theme, setTheme: (next: Theme) => mutation.mutate({ theme: next }) };
 }

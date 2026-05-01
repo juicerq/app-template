@@ -6,3 +6,4 @@ dist/
 *.tsbuildinfo
 .tanstack/
 src/renderer/src/routeTree.gen.ts
+grill/

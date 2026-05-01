@@ -2,17 +2,9 @@ directories:
   output: dist
   buildResources: build
 
-# better-sqlite3 12.x is NAPI; the prebuilt downloaded by `bun install`
-# works in both Node (vitest) and Electron. Forcing a rebuild here pins
-# the .node binary to Electron's Node ABI and breaks the test runner.
-npmRebuild: false
-
 files:
   - out/**/*
   - package.json
-
-asarUnpack:
-  - "**/*.{node,dll}"
 
 linux:
   target:
