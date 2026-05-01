@@ -2,12 +2,18 @@
 	"name": "app-template",
 	"version": "0.0.1",
 	"private": true,
-	"description": "PLACEHOLDER — descrição do app",
-	"author": "PLACEHOLDER",
-	"homepage": "PLACEHOLDER",
-	"repository": "PLACEHOLDER",
-	"productName": "PLACEHOLDER",
-	"appId": "PLACEHOLDER",
+	"description": "Personal desktop app template — Electron + JSON store + ORPC + TanStack",
+	"author": {
+		"name": "lobomfz",
+		"email": "lobomfz@protonmail.com"
+	},
+	"homepage": "https://github.com/juicerq/app-template",
+	"repository": {
+		"type": "git",
+		"url": "https://github.com/juicerq/app-template.git"
+	},
+	"productName": "App Template",
+	"appId": "io.github.juicerq.app-template",
 	"type": "module",
 	"main": "./out/main/index.js",
 	"engines": {
@@ -23,7 +29,11 @@
 		"test": "vitest run",
 		"test:watch": "vitest",
 		"check": "lobomfz-check",
-		"check:fix": "lobomfz-check --fix"
+		"check:fix": "lobomfz-check --fix",
+		"prepare": "simple-git-hooks"
+	},
+	"simple-git-hooks": {
+		"pre-commit": "bun run check"
 	},
 	"dependencies": {
 		"@orpc/client": "^1.14.0",
@@ -49,6 +59,7 @@
 		"electron-vite": "^4.0.0",
 		"oxlint": "^1.62.0",
 		"oxlint-tsgolint": "^0.22.1",
+		"simple-git-hooks": "^2.13.1",
 		"tailwindcss": "^4.2.4",
 		"typescript": "^5.9.0",
 		"vite": "^6.0.0",
