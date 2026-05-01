@@ -57,18 +57,17 @@ src/
       styles.css
   shared/                  # tipos compartilhados (se houver)
 tests/
-  setup.ts                 # log preload
+  setup.ts                 # import @main/db pra migrar
   utils/
-    db.ts                  # withDb / resetDb helpers
-    orpc.ts                # createTestClient
+    db.ts                  # resetDb helper
+    orpc.ts                # testClient
     assertions.ts          # assertDefined, assertIsInstanceOf
   todos.test.ts            # demo
 build/
   icon.png                 # placeholder 1024x1024
 electron.vite.config.ts
 electron-builder.yml
-.env.test
-bunfig.toml
+vitest.config.ts
 package.json
 tsconfig.json
 tsconfig.node.json         # main + preload
@@ -99,13 +98,14 @@ Configurar em todos os tsconfigs relevantes (`tsconfig.node.json`, `tsconfig.web
 | `bun:sqlite` | **NÃO usar** — incompatível com Node embutido no Electron |
 | `node:sqlite` | **NÃO usar** — experimental, adapter Drizzle jovem |
 | Localização (prod) | `app.getPath('userData')/app.db` |
-| Localização (test) | `:memory:` via `DATABASE_PATH` em `.env.test` |
+| Localização (test) | `:memory:` via `DATABASE_PATH` (definido em `vitest.config.ts test.env`) |
+| Resolução do path | `process.env.DATABASE_PATH ?? join(app.getPath('userData'), 'app.db')` — `electron` é lazy-loaded via `createRequire` pra não quebrar fora do Electron |
 | Singleton | Sim. DbX importam singleton, sem parâmetro `db` |
 | Pragmas no startup | `journal_mode=WAL`, `synchronous=NORMAL`, `foreign_keys=ON`, `busy_timeout=5000` |
 | Migrations | drizzle-kit gera SQL em `src/main/db/migrations/` |
 | Migrations no bundle | Via `extraResources` no electron-builder |
-| Migrations no startup | `migrate(db, { migrationsFolder })` no boot do main |
-| Rebuild do native module | `electron-builder install-app-deps` no postinstall |
+| Migrations no startup | `migrate(db, { migrationsFolder })` no module-load do `db/index.ts` (não em função exportada) |
+| Rebuild do native module | **Nenhum.** `better-sqlite3` 12.x é NAPI; o prebuilt baixado pelo `bun install` funciona em Node E Electron. `electron-builder install-app-deps` foi removido do `postinstall` porque rebuilda com headers ABI-pinned, quebrando o test runner em Node. |
 
 ## 5. IPC + ORPC
 
@@ -225,23 +225,23 @@ Configurar em todos os tsconfigs relevantes (`tsconfig.node.json`, `tsconfig.web
 
 | Item | Decisão |
 |---|---|
-| Runner | **`bun test`**, sem `--concurrent` |
+| Runner | **Vitest** (`vitest run` / `vitest`). |
+| Por que não `bun test` | `bun test` não consegue carregar `better-sqlite3` ([oven-sh/bun#4290](https://github.com/oven-sh/bun/issues/4290)). Conflito de integração entre as decisões de driver e runner; runner cedeu, driver é pré-requisito do Electron. |
 | Estrutura | **`tests/`** dedicado na raiz (não colocado, não workspace) |
-| Padrão | Singleton DB + `resetDb()` em `beforeEach` (pattern do **omnarr**, não tx rollback do web-template) |
+| Padrão | Singleton DB + `resetDb()` em `beforeEach` (pattern do **omnarr**, traduzido pra better-sqlite3) |
 | Por que não tx rollback | better-sqlite3 sync é incompatível com ORPC client async |
-| Por que connection-per-test | `:memory:` por-processo dá isolamento entre arquivos; `resetDb()` dá isolamento entre testes |
-| Variável `DATABASE_PATH` | `:memory:` em `.env.test`; sem isso, default vai pra `app.getPath('userData')` |
-| ORPC test client | `createRouterClient(appRouter, { context: {} })` |
-| `withDb` wrapper | Não usar — singleton + reset cobre |
-| `withRollback` | Não usar — Postgres-only pattern |
-| `tests/utils/db.ts` | `resetDb()` que SELECT-a tabelas via `sqlite_master` e DELETE em cada |
+| Por que connection-per-arquivo | Vitest threads pool isola módulos por arquivo de teste; `:memory:` por-arquivo dá isolamento natural; `resetDb()` dá isolamento entre testes do mesmo arquivo |
+| `DATABASE_PATH` | `:memory:` injetado via `vitest.config.ts → test.env`; sem isso, default vai pra `app.getPath('userData')` |
+| ORPC test client | `createRouterClient(router, { context: {} })` |
+| `withDb` / `withRollback` wrapper | Não usar — singleton + reset cobre |
+| `tests/utils/db.ts` | `resetDb()` que SELECT-a tabelas via `sqlite_master` e DELETE em cada (skip de `sqlite_*` e `__drizzle_*`) |
 | `tests/utils/orpc.ts` | Exporta `testClient` singleton |
 | `tests/utils/assertions.ts` | `assertDefined`, `assertIsInstanceOf` |
-| `bunfig.toml` | `[test] preload = ["./tests/setup.ts"]` |
-| `tests/setup.ts` | Log apenas (migrations rodam no module-load do db/index.ts) |
+| `tests/setup.ts` | `import "@main/db"` apenas — migrations rodam no module-load do db |
+| `vitest.config.ts` | Aliases (`@main`, `@shared`), `test.env`, `test.setupFiles` |
 | Componentes (`*.test.tsx`) | **NÃO no template.** Adicionar por projeto seguindo skill `frontend-testing`. |
 | E2E (Playwright Electron) | **NÃO no template.** Adicionar por projeto se justificar. |
-| Async assertions | `expect(() => asyncCall()).toThrow(...)` (regra do skill `testing`) |
+| Async assertions | Vitest: `await expect(asyncCall()).rejects.toThrow(...)` |
 | External HTTP | Sem `@lobomfz/ghostapi` no template (sem HTTP externo em CRUD local) |
 
 ## 13. Dev experience

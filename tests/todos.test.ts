@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it } from "bun:test";
+import { beforeEach, describe, expect, it } from "vitest";
 import { assertDefined } from "./utils/assertions";
 import { resetDb } from "./utils/db";
 import { testClient } from "./utils/orpc";
