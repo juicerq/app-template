@@ -10,9 +10,11 @@ import "@renderer/styles.css";
 
 installLoggerBridge();
 
-const rootElement = document.getElementById("root");
+const rootElement = document.querySelector("#root");
 
-if (!rootElement) throw new Error("Elemento #root não encontrado");
+if (!rootElement) {
+	throw new Error("Elemento #root não encontrado");
+}
 
 createRoot(rootElement).render(
 	<StrictMode>

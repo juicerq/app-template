@@ -3,7 +3,6 @@
 	"compilerOptions": {
 		"lib": ["ES2024"],
 		"types": ["bun-types", "node"],
-		"baseUrl": ".",
 		"paths": {
 			"@main/*": ["./src/main/*"],
 			"@shared/*": ["./src/shared/*"]

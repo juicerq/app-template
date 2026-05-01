@@ -1,12 +1,11 @@
-import { dirname, join } from "node:path";
-import { fileURLToPath } from "node:url";
+import { join } from "node:path";
 import { app, BrowserWindow } from "electron";
 import { setupAutoUpdate } from "@main/auto-update";
 import { startOrpcServer } from "@main/ipc";
 import { Logger } from "@main/logger";
 import { Settings } from "@main/store/settings";
 
-const here = dirname(fileURLToPath(import.meta.url));
+const here = import.meta.dirname;
 
 process.on("uncaughtException", (err) => {
 	Logger.error("uncaughtException", { err: String(err), stack: err.stack });
@@ -60,7 +59,9 @@ async function createWindow() {
 				...win.getNormalBounds(),
 				maximized: win.isMaximized(),
 			},
-		}).catch((err) => Logger.error("settings:windowBounds-save-failed", { err: String(err) }));
+		}).catch((err) =>
+			Logger.error("settings:windowBounds-save-failed", { err: String(err) }),
+		);
 	}, 500);
 
 	win.on("resize", saveBounds);
@@ -76,12 +77,14 @@ async function createWindow() {
 	}
 }
 
-app.whenReady().then(() => {
-	startOrpcServer();
-	createWindow().catch((err) =>
-		Logger.error("createWindow:failed", { err: String(err) }),
-	);
-	setupAutoUpdate();
-});
+await app.whenReady();
+startOrpcServer();
+setupAutoUpdate();
+
+try {
+	await createWindow();
+} catch (err) {
+	Logger.error("createWindow:failed", { err: String(err) });
+}
 
 app.on("window-all-closed", () => app.quit());

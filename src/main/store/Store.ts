@@ -4,7 +4,7 @@ import { atomicWrite } from "@main/store/atomic";
 import { envelopeSchema } from "@main/store/envelope";
 import { resolveDataDir } from "@main/store/paths";
 
-export type StoreOptions<T> = {
+type StoreOptions<T> = {
 	name: string;
 	version: number;
 	contract: { assert: (raw: unknown) => T };
@@ -40,7 +40,7 @@ export class Store<T> {
 
 	private serial<R>(op: () => Promise<R> | R): Promise<R> {
 		const next = this.queue.then(op);
-		this.queue = next.catch(() => undefined);
+		this.queue = next.catch(noop);
 		return next;
 	}
 
@@ -64,7 +64,7 @@ export class Store<T> {
 			);
 		}
 
-		let data = env.data;
+		let migrated: unknown = env.data;
 		for (let v = env.version; v < this.opts.version; v++) {
 			const migrate = this.opts.migrators[v];
 			if (!migrate) {
@@ -72,10 +72,10 @@ export class Store<T> {
 					`store '${this.opts.name}': missing migrator from v${v}`,
 				);
 			}
-			data = migrate(data);
+			migrated = migrate(migrated);
 		}
 
-		return this.opts.contract.assert(data);
+		return this.opts.contract.assert(migrated);
 	}
 
 	private writeNow(value: T): Promise<void> {
@@ -84,11 +84,14 @@ export class Store<T> {
 	}
 }
 
+function noop(): void {}
+
 function isNotFound(err: unknown): boolean {
-	return (
-		typeof err === "object" &&
-		err !== null &&
-		"code" in err &&
-		(err as { code: string }).code === "ENOENT"
-	);
+	if (typeof err !== "object" || err === null) {
+		return false;
+	}
+	if (!("code" in err)) {
+		return false;
+	}
+	return (err as { code: string }).code === "ENOENT";
 }

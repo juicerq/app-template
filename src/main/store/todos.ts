@@ -10,7 +10,7 @@ const todoSchema = type({
 
 const todosContract = todoSchema.array();
 
-export type Todo = typeof todoSchema.infer;
+type Todo = typeof todoSchema.infer;
 
 const store = new Store({
 	name: "todos",

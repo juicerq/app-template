@@ -12,11 +12,10 @@ export function installLoggerBridge(): void {
 	});
 
 	window.addEventListener("unhandledrejection", (e) => {
-		const reason = e.reason;
 		client.logger
 			.error({
-				message: reason instanceof Error ? reason.message : String(reason),
-				stack: reason instanceof Error ? reason.stack : undefined,
+				message: e.reason instanceof Error ? e.reason.message : String(e.reason),
+				stack: e.reason instanceof Error ? e.reason.stack : undefined,
 				source: "unhandledrejection",
 			})
 			.catch(() => {});

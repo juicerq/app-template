@@ -22,9 +22,8 @@ export const settingsUpdateSchema = type({
 });
 
 export type Theme = typeof themeSchema.infer;
-export type WindowBounds = typeof windowBoundsSchema.infer;
-export type SettingsValue = typeof settingsContract.infer;
-export type SettingsUpdate = typeof settingsUpdateSchema.infer;
+type SettingsValue = typeof settingsContract.infer;
+type SettingsUpdate = typeof settingsUpdateSchema.infer;
 
 const store = new Store({
 	name: "settings",
