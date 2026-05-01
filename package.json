@@ -15,15 +15,22 @@
 	},
 	"scripts": {
 		"dev": "env -u ELECTRON_RUN_AS_NODE electron-vite dev",
+		"predev": "node scripts/rebuild-better-sqlite3.mjs electron",
 		"build": "electron-vite build",
 		"preview": "env -u ELECTRON_RUN_AS_NODE electron-vite preview",
 		"dist": "electron-vite build && electron-builder --publish never",
+		"predist": "node scripts/rebuild-better-sqlite3.mjs electron",
 		"dist:linux": "electron-vite build && electron-builder --linux --publish never",
+		"predist:linux": "node scripts/rebuild-better-sqlite3.mjs electron",
 		"dist:win": "electron-vite build && electron-builder --win --publish never",
+		"predist:win": "node scripts/rebuild-better-sqlite3.mjs electron",
 		"db:generate": "drizzle-kit generate",
 		"db:studio": "drizzle-kit studio",
 		"test": "vitest run",
-		"test:watch": "vitest"
+		"pretest": "node scripts/rebuild-better-sqlite3.mjs node",
+		"test:watch": "vitest",
+		"pretest:watch": "node scripts/rebuild-better-sqlite3.mjs node",
+		"postinstall": "node scripts/rebuild-better-sqlite3.mjs electron"
 	},
 	"dependencies": {
 		"@orpc/client": "^1.14.0",

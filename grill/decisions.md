@@ -103,9 +103,9 @@ Configurar em todos os tsconfigs relevantes (`tsconfig.node.json`, `tsconfig.web
 | Singleton | Sim. DbX importam singleton, sem parâmetro `db` |
 | Pragmas no startup | `journal_mode=WAL`, `synchronous=NORMAL`, `foreign_keys=ON`, `busy_timeout=5000` |
 | Migrations | drizzle-kit gera SQL em `src/main/db/migrations/` |
-| Migrations no bundle | Via `extraResources` no electron-builder |
+| Migrations no bundle | Plugin `copyMigrations` em `electron.vite.config.ts` copia `src/main/db/migrations/` pra `out/main/migrations/` (não usa `extraResources`) |
 | Migrations no startup | `migrate(db, { migrationsFolder })` no module-load do `db/index.ts` (não em função exportada) |
-| Rebuild do native module | **Nenhum.** `better-sqlite3` 12.x é NAPI; o prebuilt baixado pelo `bun install` funciona em Node E Electron. `electron-builder install-app-deps` foi removido do `postinstall` porque rebuilda com headers ABI-pinned, quebrando o test runner em Node. |
+| Rebuild do native module | **Dança de ABI.** `better-sqlite3` 12.x não é NAPI — cada prebuilt é pinned a um Node ABI específico (Electron 33 = NMV 130, Node 25 = NMV 141). Não tem como o mesmo binário servir os dois. Hipótese inicial de NAPI estava errada; resolvido com `scripts/rebuild-better-sqlite3.mjs <node\|electron>` que faz `prebuild-install` direto pro target, com marker `.abi-target` pra evitar rebuild quando já está no estado certo. Hooks: `postinstall` / `predev` / `predist*` rebuildam pra Electron; `pretest` / `pretest:watch` rebuildam pra Node. `npmRebuild: false` no `electron-builder.yml` impede que o packager refaça rebuild redundante (e potencialmente quebrado). |
 
 ## 5. IPC + ORPC
 
