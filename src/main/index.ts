@@ -1,6 +1,7 @@
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { app, BrowserWindow } from "electron";
+import { setupAutoUpdate } from "@main/auto-update";
 import "@main/db";
 import { DbSettings } from "@main/db/DbSettings";
 import { startOrpcServer } from "@main/ipc";
@@ -46,6 +47,7 @@ function createWindow() {
 app.whenReady().then(() => {
 	startOrpcServer();
 	createWindow();
+	setupAutoUpdate();
 });
 
 app.on("window-all-closed", () => app.quit());
