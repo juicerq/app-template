@@ -4,8 +4,8 @@
 	"private": true,
 	"description": "Personal desktop app template — Electron + JSON store + ORPC + TanStack",
 	"author": {
-		"name": "lobomfz",
-		"email": "lobomfz@protonmail.com"
+		"name": "juicerq",
+		"email": "julio.cerqueiira@gmail.com"
 	},
 	"homepage": "https://github.com/juicerq/app-template",
 	"repository": {

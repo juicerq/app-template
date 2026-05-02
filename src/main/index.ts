@@ -1,9 +1,9 @@
 import { join } from "node:path";
-import { app, BrowserWindow } from "electron";
 import { setupAutoUpdate } from "@main/auto-update";
 import { startOrpcServer } from "@main/ipc";
 import { Logger } from "@main/logger";
 import { Settings } from "@main/store/settings";
+import { app, BrowserWindow } from "electron";
 
 const here = import.meta.dirname;
 
@@ -29,10 +29,13 @@ function debounce<A extends unknown[]>(
 }
 
 async function createWindow() {
-	const settings = await Settings.get().catch((err) => {
-		Logger.error("settings:read-failed", { err: String(err) });
-		return { theme: "system" as const };
-	});
+	const settings = await Settings.get().catch(
+		(err): Awaited<ReturnType<typeof Settings.get>> => {
+			Logger.error("settings:read-failed", { err: String(err) });
+			return { theme: "system" };
+		},
+	);
+
 	const saved = settings.windowBounds;
 
 	const win = new BrowserWindow({
